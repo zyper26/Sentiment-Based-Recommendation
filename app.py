@@ -7,40 +7,32 @@ from model import Recommendation
 
 recommend = Recommendation()
 
-from fastapi.templating import Jinja2Templates
-import uvicorn
-from fastapi import FastAPI, Request, Form
-from pydantic import BaseModel
+from flask import Flask, redirect, url_for, request, render_template
 
-app = FastAPI()
 
 # Define a flask app
-# app = Flask(__name__)
+app = Flask(__name__)
 
-class PostInput(BaseModel):
-    username: str
-
-templates = Jinja2Templates(directory="")
 
 # Main page
-@app.get('/')
-def index(request: Request):
-    return templates.TemplateResponse('index.html', {"request": request})
+@app.route('/', methods=['GET'])
+def index():
+    return render_template('index.html')
 
 
 # Prediction page
-@app.post('/search')
-def search(request: Request, reviews_username: str = Form(...)):
+@app.route('/pred', methods=['POST'])
+def search():
     '''
     For rendering results on HTML GUI
     '''
-    user_name = str(reviews_username).lower()
+    user_name = str(request.form.get('reviews_username')).lower()
     prediction = recommend.top_5_recommendation(user_name)
-    
+
     if(not(prediction is None)):
-        return templates.TemplateResponse("index.html", {"username": user_name, "results": prediction, "request": request})
+        return render_template('index.html', username=user_name, results=prediction)
     else:
-        return templates.TemplateResponse("index.html", { "message": "Username doesn't exists. Please enter a valid username.", "request": request})
+        return render_template("index.html", message="Username doesn't exists. Please enter a valid username.")
         
 
 if __name__ == '__main__':
